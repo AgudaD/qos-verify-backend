@@ -4,7 +4,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.schemas import DocumentResponse, FaceResponse, HealthResponse
-from app.services import face, nin, passport
 from app.utils import b64_to_tempfile, bytes_to_tempfile, cleanup, is_pdf
 
 pytesseract.pytesseract.tesseract_cmd = settings.tesseract_cmd
@@ -18,30 +17,32 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 @app.get("/health", response_model=HealthResponse)
 def health():
     return {"status": "ok"}
-
 
 @app.post("/verify/document", response_model=DocumentResponse)
 async def verify_document(doc_type: str, file: UploadFile = File(...)):
     if doc_type not in ("nin", "passport"):
         raise HTTPException(400, "doc_type must be 'nin' or 'passport'")
 
+    # LAZY IMPORT: only load the service we need
+    if doc_type == "nin":
+        from app.services import nin
+        verifier = nin.verify_nin
+    else:
+        from app.services import passport
+        verifier = passport.verify_passport
+
     data = await file.read()
     suffix = ".pdf" if is_pdf(file.filename or "") else ".jpg"
     path = bytes_to_tempfile(data, suffix)
     try:
-        if doc_type == "nin":
-            fields, face_b64 = nin.verify_nin(path)
-        else:
-            fields, face_b64 = passport.verify_passport(path)
+        fields, face_b64 = verifier(path)
     finally:
         cleanup(path)
 
     return {"doc_type": doc_type, "fields": fields, "face_image_b64": face_b64}
-
 
 @app.post("/verify/face", response_model=FaceResponse)
 async def verify_face(
@@ -49,7 +50,10 @@ async def verify_face(
     selfie: UploadFile = File(...),
 ):
     if not id_face_b64:
-        raise HTTPException(400, "id_face_b64 is required (from /verify/document)")
+        raise HTTPException(400, "id_face_b64 is required")
+    
+    # LAZY IMPORT
+    from app.services import face
 
     id_path = b64_to_tempfile(id_face_b64)
     selfie_path = bytes_to_tempfile(await selfie.read())
