@@ -1,0 +1,51 @@
+# Virtual environments
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment files
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Images / videos
+*.jpg
+*.jpeg
+*.png
+*.mp4
+*.avi
+*.mov
+
+# Old / experimental liveness scripts
+LivenessDetection.py
+LivenessDetection_backup.py
+LivenessDetection_calibrated.py
+LivenessDetection_sequence.py
+LivenessDetection_sequence_timer10.py
+LivenessDetection_sequence_timer10_fixed.py
+LivenessDetection_sequence_timer15_direction_fixed.py
+LivenessDetection_sequence_timer15_stable_head.py
+LivenessDetection_sequence_timer15_stable_head_stricter.py
+LivenessDetection_stricter.py
+LivenessDetection_20_challenges_each.py
+LivenessDetection_20_challenges_each_yaw_secondary.py
+LivenessDetection_yaw_secondary_stricter_fingers.py
+LivenessDetection_yaw_secondary_stricter_fingers_fixed.py
+LivenessDetection_yaw45.py
+LivenessDetection_yaw54.py
+LivenessDetection_yaw69.py
+test_webcam.py
+
+# Temporary files
+*.tmp
+
