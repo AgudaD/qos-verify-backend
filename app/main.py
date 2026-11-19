@@ -57,7 +57,8 @@ async def verify_document(doc_type: str, file: UploadFile = File(...)):
 # --- NEW MOCK DATABASE FOR THE DEMO ---
 MOCK_DB = {
     "user_aguda": "mock_db/aguda.jpeg",
-    "user_izik": "mock_db/izik.jpeg"
+    "user_izik": "mock_db/izik.jpeg",
+    "user_easynet": "mock_db/easynet.jpeg"
 }
 
 @app.post("/verify/face", response_model=FaceResponse)
