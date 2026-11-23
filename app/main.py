@@ -54,33 +54,26 @@ async def verify_document(doc_type: str, file: UploadFile = File(...)):
     return {"doc_type": doc_type, "fields": fields, "face_image_b64": face_b64}
 
 
-# --- NEW MOCK DATABASE FOR THE DEMO ---
-MOCK_DB = {
-    "user_aguda": "mock_db/aguda.jpeg",
-    "user_izik": "mock_db/izik.jpeg",
-    "user_easynet": "mock_db/easynet.jpeg"
-}
 
 @app.post("/verify/face", response_model=FaceResponse)
 async def verify_face(
-    user_id: str = Form(...),
+    id_face_b64: str = Form(...),
     selfie: UploadFile = File(...),
 ):
-    if not user_id:
-        raise HTTPException(400, "user_id is required")
-    
-    db_face_path = MOCK_DB.get(user_id)
-    if not db_face_path or not os.path.exists(db_face_path):
-        raise HTTPException(404, "User not found in database")
+    if not id_face_b64:
+        raise HTTPException(400, "id_face_b64 is required")
 
     from app.services import face
+
+    id_path = b64_to_tempfile(id_face_b64)
     selfie_path = bytes_to_tempfile(await selfie.read())
-    
+
     try:
-        result = face.compare_faces(db_face_path, selfie_path)
+        result = face.compare_faces(id_path, selfie_path)
     except Exception as e:
         raise HTTPException(500, f"Face comparison failed: {e}")
     finally:
+        cleanup(id_path)
         cleanup(selfie_path)
 
     return result
