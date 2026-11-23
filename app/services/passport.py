@@ -1,6 +1,6 @@
+
 import sys
 from pathlib import Path
-
 from app.services.face_crop import crop_face
 from app.utils import file_to_b64
 
@@ -10,7 +10,6 @@ if not _VENDOR.exists():
 
 sys.path.insert(0, str(_VENDOR))
 from passport_mrz import extract_mrz  # noqa: E402
-
 
 def verify_passport(image_path: str) -> tuple[dict, str]:
     fields = extract_mrz(image_path)

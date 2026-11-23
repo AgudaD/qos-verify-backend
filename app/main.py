@@ -5,10 +5,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.schemas import DocumentResponse, FaceResponse, HealthResponse
-from app.utils import b64_to_tempfile, bytes_to_tempfile, cleanup, is_pdf
+from app.utils import b64_to_tempfile, bytes_to_tempfile, cleanup, is_pdf, pdf_to_image
 from app.services.liveness import LivenessService
 
-# Initialize the liveness engine (loads PyTorch models on startup)
+# Initialize the liveness engine on startup
 liveness_engine = LivenessService()
 
 pytesseract.pytesseract.tesseract_cmd = settings.tesseract_cmd
@@ -46,13 +46,23 @@ async def verify_document(doc_type: str, file: UploadFile = File(...)):
     data = await file.read()
     suffix = ".pdf" if is_pdf(file.filename or "") else ".jpg"
     path = bytes_to_tempfile(data, suffix)
+
+    # --- FIX FOR PDF UPLOADS ---
+    if suffix == ".pdf":
+        try:
+            converted_path = pdf_to_image(path)
+            cleanup(path) # Remove the original PDF
+            path = converted_path
+        except Exception as e:
+            cleanup(path)
+            raise HTTPException(400, f"Could not read PDF: {e}")
+
     try:
         fields, face_b64 = verifier(path)
     finally:
         cleanup(path)
 
     return {"doc_type": doc_type, "fields": fields, "face_image_b64": face_b64}
-
 
 
 @app.post("/verify/face", response_model=FaceResponse)
@@ -79,7 +89,6 @@ async def verify_face(
     return result
 
 
-# --- SERVER-SIDE LIVENESS ENDPOINT ---
 @app.post("/verify/liveness")
 async def verify_liveness(file: UploadFile = File(...)):
     """

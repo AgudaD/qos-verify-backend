@@ -2,7 +2,6 @@ import cv2
 import os
 from retinaface import RetinaFace
 
-
 def crop_face(image_path: str) -> str | None:
     img = cv2.imread(image_path)
     if img is None:

@@ -3,7 +3,7 @@ import binascii
 import os
 import tempfile
 from pathlib import Path
-
+import fitz  # PyMuPDF
 
 def bytes_to_tempfile(data: bytes, suffix: str = ".jpg") -> str:
     if not data:
@@ -15,9 +15,7 @@ def bytes_to_tempfile(data: bytes, suffix: str = ".jpg") -> str:
         tmp.close()
     return tmp.name
 
-
 def b64_to_tempfile(b64: str, suffix: str = ".jpg") -> str:
-    # Accept both raw base64 and "data:image/...;base64,<payload>"
     if b64.startswith("data:") and "," in b64:
         b64 = b64.split(",", 1)[1]
     try:
@@ -26,14 +24,11 @@ def b64_to_tempfile(b64: str, suffix: str = ".jpg") -> str:
         raise ValueError("Invalid base64 image data")
     return bytes_to_tempfile(data, suffix)
 
-
 def file_to_b64(path: str) -> str:
     with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode("ascii")
 
-
 def cleanup(*paths: str | None) -> None:
-    """Delete any number of temp files; ignores None and missing files."""
     for path in paths:
         if not path:
             continue
@@ -42,6 +37,15 @@ def cleanup(*paths: str | None) -> None:
         except OSError:
             pass
 
-
 def is_pdf(filename: str) -> bool:
     return Path(filename or "").suffix.lower() == ".pdf"
+
+def pdf_to_image(pdf_path: str) -> str:
+    """Convert the first page of a PDF to a high-res JPEG for OCR."""
+    doc = fitz.open(pdf_path)
+    page = doc.load_page(0)
+    pix = page.get_pixmap(dpi=300) # High DPI for good OCR
+    out_path = pdf_path + "_converted.jpg"
+    pix.save(out_path)
+    doc.close()
+    return out_path

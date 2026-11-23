@@ -1,6 +1,6 @@
+
 import sys
 from pathlib import Path
-
 from app.services.face_crop import crop_face
 from app.utils import file_to_b64
 
@@ -10,7 +10,6 @@ if not _VENDOR.exists():
 
 sys.path.insert(0, str(_VENDOR))
 from nin_ocr import extract_fields  # noqa: E402
-
 
 def verify_nin(image_path: str) -> tuple[dict, str]:
     fields = extract_fields(image_path)
