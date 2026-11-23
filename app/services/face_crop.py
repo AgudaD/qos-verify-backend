@@ -32,9 +32,12 @@ def crop_face(image_path: str) -> str | None:
     h, w = img.shape[:2]
     pad = 10
     crop = img[max(0, y1 - pad):min(h, y2 + pad), max(0, x1 - pad):min(w, x2 + pad)]
+    
     if crop.size == 0:
         return None
 
+    crop_rgb = cv2.cvtColor(crop, cv2.COLOR_BGR2RGB)
+
     out = image_path + "_face.jpg"
-    cv2.imwrite(out, crop)
+    cv2.imwrite(out, crop_rgb)
     return out
